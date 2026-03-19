@@ -1,0 +1,51 @@
+为求解每天天气状况事先全部已知情况下的最佳策略，根据游戏规则，我们分析得出一般情况下的最优策略的迭代表达式：\\
+设\(\alpha \)为第\(t\)日价格比率的绝对值，那么有
+\begin{center}
+    $\alpha = \begin{cases}
+        1, & t=0 \\
+        2, & N_t=15 \\
+        0.5, & N_t=27
+    \end{cases}$
+\end{center}
+设\(\beta \)为第\(t\)日消耗比率的绝对值，那么有
+\begin{center}
+    $\beta = \begin{cases}
+        1, & X_t=1 \\
+        2, & X_t=2 \\
+        3, & X_t=3
+    \end{cases}$
+\end{center}
+我们建立了问题一的递推关系式。
+\begin{align}
+    &G_t = G_{t-1} + W_t - \alpha\bigl(B_w(t)P_w + B_f(t)P_f\bigr) \\
+    &F_t = F_{t-1} - \beta C_f + B_f(t) \\
+    &T_t = T_{t-1} - \beta C_w + B_w(t) \\
+    &M_t = M_{t-1} - \beta(m_w C_w + m_f C_f) + B_w(t)m_w + B_f(t)m_f \\
+    &G_T = G_{t=T} + \alpha\bigl(F_{t=T}P_f + T_{t=T}P_w\bigr)
+\end{align}
+式$1$表示$t$日的剩余金额，第一项表示第$t-1$日的剩余金额，第二项表示第$t$日的收益，括号中第一项表示第$t$日买水的支出，第二项表示第$t$日买食物的支出。\\
+式$2$表示$t$日的剩余食物，第一项表示第$t-1$日的剩余食物，第二项表示第$t$日消耗的食物，第三项表示第$t$日购买的食物。\\
+式$3$表示$t$日的剩余水，第一项表示第$t-1$日的剩余水，第二项表示第$t$日消耗的水，第三项表示第$t$日购买的水。\\
+式$4$表示$t$日的负重，第一项表示第$t-1$日的负重，第二项表示第$t$日减少的负重，第三项表示第$t$日增加的负重。\\
+式$5$表示到达终点时的金额，第一项表示到达当日的剩余金额，括号中第一项表示剩余食物的退还增加的金额，第二项表示剩余水的退还增加的金额。\\
+因此，我们将原问题转化为：
+\[
+\begin{aligned}
+\max_{} \quad & G_T \\
+\text{s.t.} \quad & 0 \le T \le 30, \\
+& G_t \ge 0,\; F_t \ge 0,\; T_t \ge 0, \quad t = 0,1,\dots,30, \\
+& 0 < M_t \le M_{\max}, \quad t = 0,1,\dots,30, \\
+& D_t = 3 \implies N_t = N_{t-1}, \quad t = 1,\dots,30.
+\end{aligned}
+\]
+利用python编程，我们求解出了第一关和第二关的最优策略和最优收益，结果如下：
+\begin{center}
+    \begin{tabular}{c|c}
+        \hline
+        关卡  & 最优收益 \\
+        \hline
+        第一关 & 10000 \\
+        第二关 & 10000 \\
+        \hline
+    \end{tabular}
+\end{center}
