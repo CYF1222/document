@@ -7,7 +7,7 @@
 \midrule
 符号 & 含义 \\
 \midrule
-$W_t$ & 第$t$日基础收益 \\
+$W$ & 收益 \\
 \midrule
 $\max M$ & 负载上限 \\
 \midrule
@@ -23,11 +23,11 @@ $m_w$ & 水质量 \\
 \midrule
 $m_f$ & 食物质量 \\
 \midrule
-$G_t$ & 第$t$日剩余金额 \\
+$G$ & 剩余金额 \\
 \midrule
-$B_w(t)$ & 水第$t$日购买量 \\
+$B_w$ & 水购买量 \\
 \midrule
-$B_f(t)$ & 食物第$t$日购买量 \\
+$B_f$ & 食物购买量 \\
 \midrule
 $N_t$ & 第$t$日所在区域编号 \\
 \midrule
@@ -39,17 +39,46 @@ $\Omega_v = \{N_{v_i} \mid i\in\mathbb{N}^*\}$ & 村庄编号集合 \\
 \midrule
 $\Omega_h = \{N_{h_i} \mid i\in\mathbb{N}^*\}$ & 矿山编号集合 \\
 \midrule
-$M_t$ & 第$t$日负重 \\
+$M$ & 负重 \\
 \midrule
-$F_t$ & 食物第$t$日剩余量 \\
+$F$ & 食物剩余量 \\
 \midrule
-$T_t$ & 水第$t$日剩余量 \\
+$T$ & 水剩余量 \\
 \midrule
-$D_t$ & 第$t$日天气（1-晴朗，2-高温，3-沙暴） \\
+$D$ & 天气（1-晴朗，2-高温，3-沙暴） \\
 \midrule
-$X_t$ & 第$t$日动向（1-移动，2-停留，3-挖矿） \\
+$X$ & 动向（1-移动，2-停留，3-挖矿） \\
 \midrule
 $T = \max t$ & 到终点时的天数 \\
+\hline
+$n$ & 玩家总数 \\
+\hline
+$i\in\{1,2,\dots,n\}$ & 玩家编号 \\
+\hline
+$E$ & 地图邻接边集合 \\
+\hline
+$a_{uv}$ & 邻接矩阵元素，若区域 $u,v$ 相邻则 $a_{uv}=1$，否则 $a_{uv}=0$ \\
+\hline
+$Y_{i,t}^{uv}$ & 第 $i$ 名玩家在第 $t$ 日是否沿边 $(u,v)$ 移动的0-1变量 \\
+\hline
+$Z_{i,t}^{h}$ & 第 $i$ 名玩家在第 $t$ 日是否在矿山 $h\in\Omega_h$ 挖矿的0-1变量 \\
+\hline
+$Q_{i,t}^{v}$ & 第 $i$ 名玩家在第 $t$ 日是否在村庄 $v\in\Omega_v$ 购买资源的0-1变量 \\
+\hline
+$k_t^{uv}$ & 第 $t$ 日沿边 $(u,v)$ 同时移动的玩家数 \\
+\hline
+$k_t^{h}$ & 第 $t$ 日在矿山 $h$ 同时挖矿的玩家数 \\
+\hline
+$k_t^{v}$ & 第 $t$ 日在村庄 $v$ 同时购买资源的玩家数 \\
+\hline
+$\delta$ & 联盟稳定性指标 \\
+\hline
+$\mathcal P_i$ & 由前两问路径模型生成的第 $i$ 名玩家候选可行路径集 \\
+\hline
+$\pi_t(d'\mid d)$ & 天气状态从 $d$ 转移到 $d'$ 的条件概率 \\
+\hline
+$V_t(\cdot)$ & 第 $t$ 日滚动决策价值函数\\
+\hline
 \bottomrule[1.5pt]
 \end{tabularx}
 \end{center}
