@@ -1,12 +1,21 @@
-\begin{center}
-\begin{tabularx}{\textwidth}{
-  >{\centering\arraybackslash}X
-  |>{\centering\arraybackslash}p{0.667\textwidth}
-  }
+\begin{longtable}{
+  >{\centering\arraybackslash}p{0.25\textwidth}  % 第一列固定宽度，居中
+  p{0.667\textwidth}                            % 第二列固定宽度，左对齐
+}
 \toprule[1.5pt]
-\midrule
 符号 & 含义 \\
 \midrule
+\endfirsthead
+\toprule[1.5pt]
+符号 & 含义 \\
+\midrule
+\endhead
+\bottomrule[1.5pt]
+\multicolumn{2}{r}{续下页} \\
+\endfoot
+\bottomrule[1.5pt]
+\endlastfoot
+
 $W$ & 收益 \\
 \midrule
 $\max M$ & 负载上限 \\
@@ -50,35 +59,32 @@ $D$ & 天气（1-晴朗，2-高温，3-沙暴） \\
 $X$ & 动向（1-移动，2-停留，3-挖矿） \\
 \midrule
 $T = \max t$ & 到终点时的天数 \\
-\hline
+\midrule
 $n$ & 玩家总数 \\
-\hline
+\midrule
 $i\in\{1,2,\dots,n\}$ & 玩家编号 \\
-\hline
+\midrule
 $E$ & 地图邻接边集合 \\
-\hline
+\midrule
 $a_{uv}$ & 邻接矩阵元素，若区域 $u,v$ 相邻则 $a_{uv}=1$，否则 $a_{uv}=0$ \\
-\hline
+\midrule
 $Y_{i,t}^{uv}$ & 第 $i$ 名玩家在第 $t$ 日是否沿边 $(u,v)$ 移动的0-1变量 \\
-\hline
+\midrule
 $Z_{i,t}^{h}$ & 第 $i$ 名玩家在第 $t$ 日是否在矿山 $h\in\Omega_h$ 挖矿的0-1变量 \\
-\hline
+\midrule
 $Q_{i,t}^{v}$ & 第 $i$ 名玩家在第 $t$ 日是否在村庄 $v\in\Omega_v$ 购买资源的0-1变量 \\
-\hline
+\midrule
 $k_t^{uv}$ & 第 $t$ 日沿边 $(u,v)$ 同时移动的玩家数 \\
-\hline
+\midrule
 $k_t^{h}$ & 第 $t$ 日在矿山 $h$ 同时挖矿的玩家数 \\
-\hline
+\midrule
 $k_t^{v}$ & 第 $t$ 日在村庄 $v$ 同时购买资源的玩家数 \\
-\hline
+\midrule
 $\delta$ & 联盟稳定性指标 \\
-\hline
+\midrule
 $\mathcal P_i$ & 由前两问路径模型生成的第 $i$ 名玩家候选可行路径集 \\
-\hline
+\midrule
 $\pi_t(d'\mid d)$ & 天气状态从 $d$ 转移到 $d'$ 的条件概率 \\
-\hline
-$V_t(\cdot)$ & 第 $t$ 日滚动决策价值函数\\
-\hline
-\bottomrule[1.5pt]
-\end{tabularx}
-\end{center}
+\midrule
+$V_t(\cdot)$ & 第 $t$ 日滚动决策价值函数 \\
+\end{longtable}
