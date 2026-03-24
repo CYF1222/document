@@ -1,0 +1,1300 @@
+\textbf{第一关代码}
+\begin{minted}{c++}
+#include<bits/stdc++.h>
+using namespace std;
+int dp[31][31][410][610]; // i, j, k, l, 时间，地点，水量，食物。
+int daystate[35] = {0, 2, 2, 1, 3, 1, 2, 3, 1, 2, 2,
+     3, 2, 1, 2, 2, 2, 3, 3, 2, 2, 
+     1, 1, 2, 1, 3, 2, 1, 1, 2, 2}; // 1, 2, 3晴朗，高温，沙暴；
+int wa[5] = {0, 5, 8, 10};
+int fo[5] = {0, 7, 6, 10};
+vector<int> v[35];
+void sta(){
+
+    v[27].push_back(26); 
+    v[27].push_back(21);
+    
+    v[26].push_back(27); 
+    v[26].push_back(25);
+    
+    v[25].push_back(24); 
+    v[25].push_back(1); 
+    v[25].push_back(26);
+    
+    v[24].push_back(25); 
+    v[24].push_back(23);
+    
+    v[23].push_back(24); 
+    v[23].push_back(21);
+    
+    v[21].push_back(23); 
+    v[21].push_back(9); 
+    v[21].push_back(27);
+    
+    v[9].push_back(21); 
+    v[9].push_back(10); 
+    v[9].push_back(15);
+    
+    v[10].push_back(9); 
+    v[10].push_back(11);
+    
+    v[11].push_back(10); 
+    v[11].push_back(12);
+    
+    v[12].push_back(13); 
+    v[12].push_back(11);
+    
+    v[13].push_back(12); 
+    v[13].push_back(15);
+    
+    v[15].push_back(9); 
+    v[15].push_back(13);
+    
+    v[1].push_back(25);
+}
+
+void dfs(int t, int cur, int w, int f){
+    if(t == 0){
+        printf("决策：移动，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+        return;
+    }
+    if(daystate[t] != 3){
+        if(cur != 15){ //移动
+            for(auto p : v[cur])
+                if(dp[t - 1][p][w + 2 * wa[ daystate[t] ]][f + 2 * fo[ daystate[t] ]] == dp[t][cur][w][f]){
+                    dfs(t - 1, p, w + 2 * wa[ daystate[t]], f + 2 * fo[ daystate[t]]);
+                    printf("决策：移动，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+                    return;
+                }
+        }else {
+            for(auto p : v[cur])
+                for(int k = 2 * wa[daystate[t]]; k <= w + 2 * wa[daystate[t]]; k++) // 要走一步
+                    for(int l = 2 * fo[daystate[t]]; l <= f + 2 * fo[daystate[t]]; l++)
+                        if(dp[t - 1][p][k][l] == dp[t][cur][w][f] + 
+                            10 * (w + 2 * wa[daystate[t]] - k) + 20 * (f + 2 * fo[daystate[t]] - l)){
+                                dfs(t - 1, p, k, l);
+                                printf("决策：买东西，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+                                return;
+                            }
+        }
+    }
+    if(cur == 12)
+        if(dp[t - 1][cur][w + 3 * wa[daystate[t]]][f + 3 * fo[daystate[t]]] == dp[t][cur][w][f] - 1000){
+            dfs(t - 1, cur, w + 3 * wa[daystate[t]] , f + 3 * fo[daystate[t]]);
+            printf("决策：挖矿，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+            return;
+        }
+    
+    if(dp[t - 1][cur][w + 1 * wa[daystate[t]]][f + 1 * fo[daystate[t]]] == dp[t][cur][w][f]){
+        dfs(t - 1, cur, w + 1 * wa[daystate[t]] , f + 1 * fo[daystate[t]]);
+        printf("决策：停留，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+        return;
+    }
+    
+}
+int main(){
+    sta();
+
+    for(int i = 0; i <= 30; i++)
+        for(int j = 0; j <= 30; j++)
+            for(int k = 0; k <= 400; k++)
+                for(int l = 0; l <= 600; l++)
+                    dp[i][j][k][l] = -5e3;
+
+    for(int k = 0; k <= 400; k++){
+        for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+            if(10000 - 5 * k - 10 * l >= 0)
+                dp[0][1][k][l] = 10000 - 5 * k - 10 * l;
+            
+        }
+    }
+
+    for(int i = 1; i <= 30; i++){
+        if(daystate[i] != 3) //非沙暴天
+            for(int j = 1; j <= 27; j++)
+                for(int k = wa[daystate[i]] * 2; k <= 400; k++)   
+                    for(int l = fo[daystate[i]] * 2; l <= (1200 - 3 * k) / 2; l++){
+                        if(dp[i - 1][j][k][l] < 0) continue;
+                        for(auto t : v[j])
+                            dp[i][t][k - wa[daystate[i]] * 2][l - fo[daystate[i]] * 2] = 
+                            max(dp[i - 1][j][k][l], dp[i][t][k - wa[daystate[i]] * 2][l - fo[daystate[i]] * 2]);
+                            //移动
+                    }
+        
+        for(int j = 1; j <= 27; j++)
+            for(int k = wa[daystate[i]]; k <= 400; k++)   
+                for(int l = fo[daystate[i]]; l <= (1200 - 3 * k) / 2; l++){
+                    if(dp[i - 1][j][k][l] < 0) continue;
+                    dp[i][j][k - wa[daystate[i]]][l - fo[daystate[i]]] = 
+                    max(dp[i - 1][j][k][l], dp[i][j][k - wa[daystate[i]]][l - fo[daystate[i]]]);
+                            //停留
+                }
+
+        for(int k = wa[daystate[i]] * 3; k <= 400; k++)   
+            for(int l = fo[daystate[i]] * 3; l <= (1200 - 3 * k) / 2; l++){
+                if(dp[i - 1][12][k][l] < 0) continue;
+                dp[i][12][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3] = 
+                        max(dp[i - 1][12][k][l] + 1000, dp[i][12][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3]);
+                        //挖矿
+            }
+
+        for(int k = 0; k <= 400; k++)   
+            for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+                if(k > 0)
+                    dp[i][15][k][l] = max(dp[i][15][k][l], dp[i][15][k - 1][l] - 10); //价格双倍
+                if(l > 0)
+                    dp[i][15][k][l] = max(dp[i][15][k][l], dp[i][15][k][l - 1] - 20);
+            }//买东西
+    }
+    int res = 0;
+    int t = 0;
+    for(int i = 1; i <= 30; i++)
+        if(res < dp[i][27][0][0]){
+            res = dp[i][27][0][0];
+            t = i;
+        }
+    dfs(t, 27, 0, 0);
+    cout << res << " " << t << endl;
+}
+\end{minted}
+
+\textbf{第二关代码}
+\begin{minted}{c++}
+#pragma GCC optimize("O2")
+#pragma GCC optimize("Ofast")
+#pragma GCC optimize("inline")
+#pragma GCC optimize("omit-frame-pointer")
+#pragma GCC optimize("unroll-loops")
+#include<bits/stdc++.h>
+using namespace std;
+int Po = 27; 
+int dp[31][65][403][603]; // i, j, k, l, 时间，地点，水量，食物。
+int daystate[35] = {0, 2, 2, 1, 3, 1, 2, 3, 1, 2, 2,
+     3, 2, 1, 2, 2, 2, 3, 3, 2, 2, 
+     1, 1, 2, 1, 3, 2, 1, 1, 2, 2}; // 1, 2, 3晴朗，高温，沙暴；
+int wa[5] = {0, 5, 8, 10};
+int fo[5] = {0, 7, 6, 10};
+vector<int> v[70];
+
+void sta(){
+    //第二关数据
+    for(int i = 1; i <= 63; i++)
+        if(i % 8){
+            v[i].push_back(i + 1);
+            v[i + 1].push_back(i);
+        }
+    
+    for(int i = 1; i <= 56; i++){
+            v[i].push_back(i + 8);
+            v[i + 8].push_back(i);
+        }
+    
+    for(int i = 0; i <= 3; i++)
+        for(int j = 2; j <= 8; j++){
+            v[i * 16 + j].push_back(i * 16 + j + 7);
+            v[i * 16 + j + 7].push_back(i * 16 + j);
+        }
+    for(int i = 1; i <= 3; i++)
+        for(int j = 1; j <= 7; j++){
+            v[i * 16 - (8 - j)].push_back(i * 16 - (8 - j) + 9);
+            v[i * 16 - (8 - j) + 9].push_back(i * 16 - (8 - j));
+        }
+
+}
+
+
+void dfs(int t, int cur, int w, int f){
+    if(t == 0){
+        printf("决策：移动，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+        return;
+    }
+    if(daystate[t] != 3){
+        if(cur != 39 && cur != 62){ //移动
+            for(auto p : v[cur])
+                if(dp[t - 1][p][w + 2 * wa[ daystate[t] ]][f + 2 * fo[ daystate[t] ]] == dp[t][cur][w][f]){
+                    dfs(t - 1, p, w + 2 * wa[ daystate[t]], f + 2 * fo[ daystate[t]]);
+                    printf("决策：移动，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+                    return;
+                }
+        }else{
+            for(auto p : v[cur])
+                for(int k = 2 * wa[daystate[t]]; k <= w + 2 * wa[daystate[t]]; k++) // 要走一步
+                    for(int l = 2 * fo[daystate[t]]; l <= f + 2 * fo[daystate[t]]; l++)
+                        if(dp[t - 1][p][k][l] == dp[t][cur][w][f] + 
+                            10 * (w + 2 * wa[daystate[t]] - k) + 20 * (f + 2 * fo[daystate[t]] - l)){
+                                dfs(t - 1, p, k, l);
+                                printf("决策：买东西，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+                                return;
+                            }
+                        }
+    }
+    if(cur == 30 || cur == 55)
+        if(dp[t - 1][cur][w + 3 * wa[daystate[t]]][f + 3 * fo[daystate[t]]] == dp[t][cur][w][f] - 1000){
+            dfs(t - 1, cur, w + 3 * wa[daystate[t]] , f + 3 * fo[daystate[t]]);
+            printf("决策：挖矿，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+            return;
+        }
+
+    if(dp[t - 1][cur][w + 1 * wa[daystate[t]]][f + 1 * fo[daystate[t]]] == dp[t][cur][w][f]){
+        dfs(t - 1, cur, w + 1 * wa[daystate[t]] , f + 1 * fo[daystate[t]]);
+        printf("决策：停留，当天的天气%d 第几天：%d %d %d %d %d\n", daystate[t], t, cur, w, f, dp[t][cur][w][f]);
+        return;
+    }
+    
+}
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    sta();
+    
+    for(int i = 0; i <= 30; i++)
+        for(int j = 0; j <= 64; j++)
+            for(int k = 0; k <= 400; k++)
+                for(int l = 0; l <= 600; l++)
+                    dp[i][j][k][l] = -5e3;
+
+    for(int k = 0; k <= 400; k++){
+        for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+            if(10000 - 5 * k - 10 * l >= 0)
+                dp[0][1][k][l] = 10000 - 5 * k - 10 * l;
+            
+        }
+    }
+
+    for(int i = 1; i <= 30; i++){
+        if(daystate[i] != 3) //非沙暴天
+            for(int j = 1; j <= 64; j++)
+                for(int k = wa[daystate[i]] * 2; k <= 400; k++)   
+                    for(int l = fo[daystate[i]] * 2; l <= (1200 - 3 * k) / 2; l++){
+                        if(dp[i - 1][j][k][l] < 0) continue;
+                        for(auto t : v[j])
+                            dp[i][t][k - wa[daystate[i]] * 2][l - fo[daystate[i]] * 2] = 
+                            max(dp[i - 1][j][k][l], dp[i][t][k - wa[daystate[i]] * 2][l - fo[daystate[i]] * 2]);
+                            //移动
+                    }
+        
+        for(int j = 1; j <= 64; j++)
+            for(int k = wa[daystate[i]]; k <= 400; k++)   
+                for(int l = fo[daystate[i]]; l <= (1200 - 3 * k) / 2; l++){
+                    if(dp[i - 1][j][k][l] < 0) continue;
+                    dp[i][j][k - wa[daystate[i]]][l - fo[daystate[i]]] = 
+                    max(dp[i - 1][j][k][l], dp[i][j][k - wa[daystate[i]]][l - fo[daystate[i]]]);
+                            //停留
+                }
+
+        for(int k = wa[daystate[i]] * 3; k <= 400; k++)   
+            for(int l = fo[daystate[i]] * 3; l <= (1200 - 3 * k) / 2; l++){
+                if(dp[i - 1][30][k][l] < 0) continue;
+                dp[i][30][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3] = 
+                        max(dp[i - 1][30][k][l] + 1000, dp[i][12][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3]);
+                        //挖矿
+            }
+        
+        for(int k = wa[daystate[i]] * 3; k <= 400; k++)   
+            for(int l = fo[daystate[i]] * 3; l <= (1200 - 3 * k) / 2; l++){
+                if(dp[i - 1][55][k][l] < 0) continue;
+                dp[i][55][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3] = 
+                        max(dp[i - 1][55][k][l] + 1000, dp[i][55][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3]);
+                        //挖矿
+            }
+
+        for(int k = 0; k <= 400; k++)   
+            for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+                if(k > 0)
+                    dp[i][39][k][l] = max(dp[i][39][k][l], dp[i][39][k - 1][l] - 10); //价格双倍
+                if(l > 0)
+                    dp[i][39][k][l] = max(dp[i][39][k][l], dp[i][39][k][l - 1] - 20);
+            }//买东西
+        for(int k = 0; k <= 400; k++)   
+            for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+                if(k > 0)
+                    dp[i][62][k][l] = max(dp[i][62][k][l], dp[i][62][k - 1][l] - 10); //价格双倍
+                if(l > 0)
+                    dp[i][62][k][l] = max(dp[i][62][k][l], dp[i][62][k][l - 1] - 20);
+            }//买东西
+    }
+    int res = 0;
+    int t = 0;
+    for(int i = 1; i <= 30; i++)
+        if(res < dp[i][64][0][0]){
+            res = dp[i][64][0][0];
+            t = i;
+        }
+
+    dfs(t, 64, 0, 0);
+
+    cout << res << " " << t << endl;
+
+}
+\end{minted}
+
+\textbf{第三关代码}
+\begin{minted}{c++}
+#pragma GCC optimize("O2")
+#pragma GCC optimize("Ofast")
+#pragma GCC optimize("inline")
+#pragma GCC optimize("omit-frame-pointer")
+#pragma GCC optimize("unroll-loops")
+#include<bits/stdc++.h>
+using namespace std;
+int dp[20][20][403][603]; // i, j, k, l, 时间，地点，水量，食物。
+int daystate[35] = {0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}; // 1, 2, 3晴朗，高温，沙暴；
+int wa[5] = {0, 3, 9, 10};
+int fo[5] = {0, 4, 9, 10};
+vector<int> v[30];
+int comes = 1, wt, fd;
+void sta(){
+
+    // 第三关数据
+    v[1].push_back(2), v[1].push_back(4), v[1].push_back(5);
+    v[2].push_back(1), v[2].push_back(3), v[2].push_back(4);
+    v[3].push_back(2), v[3].push_back(4), v[3].push_back(8), v[3].push_back(9);
+    v[4].push_back(1), v[4].push_back(2), v[4].push_back(3), 
+    v[4].push_back(5), v[4].push_back(6), v[4].push_back(7);
+    v[5].push_back(1), v[5].push_back(4), v[5].push_back(6);
+    v[6].push_back(4), v[6].push_back(5), v[6].push_back(7),
+    v[6].push_back(12), v[6].push_back(13);
+    v[7].push_back(4), v[7].push_back(11), v[7].push_back(6), v[7].push_back(12);
+    v[8].push_back(3), v[8].push_back(9);
+    v[9].push_back(3), v[9].push_back(8), v[9].push_back(10), v[9].push_back(11);
+    v[10].push_back(9), v[10].push_back(11), v[10].push_back(13);
+    v[11].push_back(7), v[11].push_back(9), v[11].push_back(10),
+    v[11].push_back(12), v[11].push_back(13);
+    v[12].push_back(6), v[12].push_back(7), v[12].push_back(11), v[12].push_back(13);
+    v[13].push_back(6), v[13].push_back(10), v[13].push_back(11), v[13].push_back(12);
+
+    
+}
+
+struct S{
+    int t, day, wat, foo, re;
+}st[40];
+int cnt = 0;
+
+void dfs(int t, int cur, int w, int f, int now){
+    if(now == t){
+        wt = w;
+        fd = f;
+        comes = cur;
+        st[cnt++] = {t, cur, w, f, dp[t][cur][w][f]};
+        return;
+    }
+
+    if(t == 0){
+        st[cnt++] = {t, cur, w, f, dp[t][cur][w][f]};
+        // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+        return;
+    }
+    if(daystate[t] != 3){
+        if(cur != 20 && cur != 20){ //移动
+            for(auto p : v[cur])
+                if(dp[t - 1][p][w + 2 * wa[ daystate[t] ]][f + 2 * fo[ daystate[t] ]] == dp[t][cur][w][f]){
+                    dfs(t - 1, p, w + 2 * wa[ daystate[t]], f + 2 * fo[ daystate[t]], now);
+                    // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+                    return;
+                }
+        }else{
+            for(auto p : v[cur])
+                for(int k = 2 * wa[daystate[t]]; k <= w + 2 * wa[daystate[t]]; k++) // 要走一步
+                    for(int l = 2 * fo[daystate[t]]; l <= f + 2 * fo[daystate[t]]; l++)
+                        if(dp[t - 1][p][k][l] == dp[t][cur][w][f] + 
+                            10 * (w + 2 * wa[daystate[t]] - k) + 20 * (f + 2 * fo[daystate[t]] - l)){
+                                dfs(t - 1, p, k, l, now);
+                                // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+                                return;
+                            }
+                        }
+    }
+    if(cur == 9)
+        if(dp[t - 1][cur][w + 3 * wa[daystate[t]]][f + 3 * fo[daystate[t]]] == dp[t][cur][w][f] - 200){
+            dfs(t - 1, cur, w + 3 * wa[daystate[t]] , f + 3 * fo[daystate[t]], now);
+            // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+            return;
+        }
+
+    if(dp[t - 1][cur][w + 1 * wa[daystate[t]]][f + 1 * fo[daystate[t]]] == dp[t][cur][w][f]){
+        dfs(t - 1, cur, w + 1 * wa[daystate[t]] , f + 1 * fo[daystate[t]], now);
+        // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+        return;
+    }
+    
+}
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    auto start = std::chrono::high_resolution_clock::now();
+    sta();
+    
+
+    double trans_prob[3][3];
+    trans_prob[1][1] = 0.5;   // 晴→晴: 2次
+    trans_prob[1][2] = 0.5;   // 晴→高: 6次
+    trans_prob[1][3] = 0.0;        // 晴→沙: 0
+        
+        // 高温(2)的转移（只考虑晴朗和高温）
+    trans_prob[2][1] = 0.2;  // 高→晴: 5次
+    trans_prob[2][2] = 0.8;  // 高→高: 10次
+    trans_prob[2][3] = 0.0;        // 高→沙: 0
+        
+        // 沙暴(3)的转移（实际不会用到）
+    trans_prob[3][1] = 0.0;
+    trans_prob[3][2] = 0.0;
+    trans_prob[3][3] = 0.0;
+    srand(time(0));
+    
+    for(int day = 1; day <= 10; day++){
+
+    double ran = rand() % 50000 / (double)50000;
+    if(daystate[day - 1] == 0){
+        if(trans_prob[1][1] >= ran) {
+            
+            daystate[day] = 1; // 晴天
+        }else 
+            daystate[day] = 2;// 高温
+    }else {
+        if(trans_prob[daystate[day - 1]][1] >= ran) // 根据上一天的天气来看
+            daystate[day] = 1; // 晴天
+        else 
+            daystate[day] = 2;// 高温
+    }
+    // daystate[day] = 2;
+    for(int i = 0; i <= 10; i++)
+        for(int j = 0; j <= 13; j++)
+            for(int k = 0; k <= 400; k++)
+                for(int l = 0; l <= 600; l++)
+                    if(i != day - 1 || comes != j || day == 1 || wt != k || fd != l)
+                        dp[i][j][k][l] = -5e3;
+    if(day == 1){
+        for(int k = 0; k <= 400; k++){
+            for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+                if(10000 - 5 * k - 10 * l >= 0)
+                    dp[0][1][k][l] = 10000 - 5 * k - 10 * l;
+                
+            }
+        }
+    }
+
+    for(int i = 1; i <= 10; i++){
+        if(daystate[i] != 3) //非沙暴天
+            for(int j = 1; j <= 13; j++)
+                for(int k = wa[daystate[i]] * 2; k <= 400; k++)   
+                    for(int l = fo[daystate[i]] * 2; l <= (1200 - 3 * k) / 2; l++){
+                        if(dp[i - 1][j][k][l] < 0) continue;
+                        for(auto t : v[j])
+                            dp[i][t][k - wa[daystate[i]] * 2][l - fo[daystate[i]] * 2] = 
+                            max(dp[i - 1][j][k][l], dp[i][t][k - wa[daystate[i]] * 2][l - fo[daystate[i]] * 2]);
+                            //移动
+                    }
+        
+        for(int j = 1; j <= 13; j++)
+            for(int k = wa[daystate[i]]; k <= 400; k++)   
+                for(int l = fo[daystate[i]]; l <= (1200 - 3 * k) / 2; l++){
+                    if(dp[i - 1][j][k][l] < 0) continue;
+                    dp[i][j][k - wa[daystate[i]]][l - fo[daystate[i]]] = 
+                    max(dp[i - 1][j][k][l], dp[i][j][k - wa[daystate[i]]][l - fo[daystate[i]]]);
+                            //停留
+                }
+        
+        for(int k = wa[daystate[i]] * 3; k <= 400; k++)   
+            for(int l = fo[daystate[i]] * 3; l <= (1200 - 3 * k) / 2; l++){
+                if(dp[i - 1][9][k][l] < 0) continue;
+                dp[i][9][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3] = 
+                        max(dp[i - 1][9][k][l] + 200, dp[i][9][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3]);
+                        //挖矿
+            }
+
+        // for(int k = 0; k <= 400; k++)   
+        //     for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+        //         if(k > 0)
+        //             dp[i][39][k][l] = max(dp[i][39][k][l], dp[i][39][k - 1][l] - 10); //价格双倍
+        //         if(l > 0)
+        //             dp[i][39][k][l] = max(dp[i][39][k][l], dp[i][39][k][l - 1] - 20);
+        //     }//买东西
+    }
+
+        double res = 0;
+        int t = 0;
+        int k1 = 0, l1 = 0;
+        for(int i = 1; i <= 10; i++)
+            for(int k = 0; k <= 400; k++)
+                for(int l = 0; l <= 600; l++)
+                    if(res < dp[i][13][k][l]){
+                        res = dp[i][13][k][l];
+                        k1 = k;
+                        l1 = l;
+                        t = i;
+                    }
+        dfs(t, 13, k1, l1, day);
+        if(t == day) break;
+    }
+    
+    for(int i = 0; i < cnt; i++){
+        if(i == cnt - 1){
+            st[i].re += st[i].wat * 2.5 + st[i].foo * 5.0;
+            st[i].wat = st[i].foo = 0;
+        }
+
+        cout << st[i].t << " " << st[i].day << " " << st[i].wat << " " << st[i].foo << " " << st[i].re << endl;
+    }
+    for(int i = 0; i <= 10; i++)
+        cout << daystate[i] << " ";
+    cout << endl;
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+
+    std::cout << "代码段运行时间: " << duration.count() << " 秒" << std::endl;
+}
+\end{minted}
+
+\textbf{第四关代码}
+\begin{minted}{c++}
+#pragma GCC optimize("O2")
+#pragma GCC optimize("Ofast")
+#pragma GCC optimize("inline")
+#pragma GCC optimize("omit-frame-pointer")
+#pragma GCC optimize("unroll-loops")
+#include<bits/stdc++.h>
+using namespace std;
+int dp[32][30][403][603]; // i, j, k, l, 时间，地点，水量，食物。
+int daystate[35] = {0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                        2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                        2, 2, 2, 2, 2, 2, 2, 2, 2, 2}; // 1, 2, 3晴朗，高温，沙暴；
+int wa[5] = {0, 3, 9, 10};
+int fo[5] = {0, 4, 9, 10};
+vector<int> v[70];
+int comes = 1, wt, fd;
+void sta(){
+
+    //第四关数据
+    for(int i = 1; i <= 4; i++)  
+        for(int j = 0; j < 4; j++){
+            v[j * 5 + i].push_back(j * 5 + i + 1);
+            v[j * 5 + i + 1].push_back(j * 5 + i);
+            v[j * 5 + i].push_back(j * 5 + i + 5);
+            v[j * 5 + i + 5].push_back(j * 5 + i);
+        }
+    for(int i = 1; i <= 4; i++){
+        v[i * 5].push_back(i * 5 + 5);
+        v[i * 5 + 5].push_back(i * 5);
+    }
+    for(int i = 1; i <= 4; i++){
+        v[20 + i].push_back(21 + i);
+        v[21 + i].push_back(20 + i);
+    }
+}
+
+struct S{
+    int t, day, wat, foo, re;
+}st[40];
+int cnt = 0;
+
+void dfs(int t, int cur, int w, int f, int now){
+    if(now == t){
+        wt = w;
+        fd = f;
+        comes = cur;
+        st[cnt++] = {t, cur, w, f, dp[t][cur][w][f]};
+        return;
+    }
+
+
+    if(t == 0){
+        st[cnt++] = {t, cur, w, f, dp[t][cur][w][f]};
+        // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+        return;
+    }
+    if(daystate[t] != 3){
+        if(cur != 14){ //移动
+            for(auto p : v[cur])
+                if(dp[t - 1][p][w + 2 * wa[ daystate[t] ]][f + 2 * fo[ daystate[t] ]] == dp[t][cur][w][f]){
+                    dfs(t - 1, p, w + 2 * wa[ daystate[t]], f + 2 * fo[ daystate[t]], now);
+                    // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+                    return;
+                }
+        }else{
+            for(auto p : v[cur])
+                for(int k = 2 * wa[daystate[t]]; k <= w + 2 * wa[daystate[t]]; k++) // 要走一步
+                    for(int l = 2 * fo[daystate[t]]; l <= f + 2 * fo[daystate[t]]; l++)
+                        if(dp[t - 1][p][k][l] == dp[t][cur][w][f] + 
+                            10 * (w + 2 * wa[daystate[t]] - k) + 20 * (f + 2 * fo[daystate[t]] - l)){
+                                dfs(t - 1, p, k, l, now);
+                                // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+                                return;
+                            }
+                        }
+    }
+    if(cur == 18)
+        if(dp[t - 1][cur][w + 3 * wa[daystate[t]]][f + 3 * fo[daystate[t]]] == dp[t][cur][w][f] - 1000){
+            dfs(t - 1, cur, w + 3 * wa[daystate[t]] , f + 3 * fo[daystate[t]], now);
+            // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+            return;
+        }
+
+    if(dp[t - 1][cur][w + 1 * wa[daystate[t]]][f + 1 * fo[daystate[t]]] == dp[t][cur][w][f]){
+        dfs(t - 1, cur, w + 1 * wa[daystate[t]] , f + 1 * fo[daystate[t]], now);
+        // printf("%d %d %d %d %d\n", t, cur, w, f, dp[t][cur][w][f]);
+        return;
+    }
+    
+}
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    auto start = std::chrono::high_resolution_clock::now();
+    sta();
+    
+
+    double trans_prob[3][3];
+    trans_prob[1][1] = 0.5;   // 晴→晴: 2次
+    trans_prob[1][2] = 0.4;   // 晴→高: 6次
+    trans_prob[1][3] = 0.1;        // 晴→沙: 0
+        
+        // 高温(2)的转移（只考虑晴朗和高温）
+    trans_prob[2][1] = 0.3;  // 高→晴: 5次
+    trans_prob[2][2] = 0.6;  // 高→高: 10次
+    trans_prob[2][3] = 0.1;        // 高→沙: 0
+        
+        // 沙暴(3)的转移（实际不会用到）
+    trans_prob[3][1] = 0.6;
+    trans_prob[3][2] = 0.3;
+    trans_prob[3][3] = 0.1;
+    srand(time(0));
+    
+    for(int day = 1; day <= 30; day++){
+
+    double ran = rand() % 50000 / (double)50000;
+    if(daystate[day - 1] == 0){
+        if(trans_prob[1][1] >= ran) {
+            
+            daystate[day] = 1; // 晴天
+        }else if(trans_prob[1][1] + trans_prob[1][2] >= ran)
+            daystate[day] = 2;// 高温
+        else 
+            daystate[day] = 3; //沙暴
+    }else {
+        if(trans_prob[daystate[day - 1]][1] >= ran) // 根据上一天的天气来看
+            daystate[day] = 1; // 晴天
+        else if(trans_prob[daystate[day - 1]][1] + trans_prob[daystate[day - 1]][2] >= ran)
+            daystate[day] = 2;// 高温
+        else 
+            daystate[day] = 3; //沙暴
+    }
+    // daystate[day] = 2;
+    for(int i = 0; i <= 30; i++)
+        for(int j = 0; j <= 25; j++)
+            for(int k = 0; k <= 400; k++)
+                for(int l = 0; l <= 600; l++)
+                    if(i != day - 1 || comes != j || day == 1 || wt != k || fd != l)
+                        dp[i][j][k][l] = -5e3;
+    if(day == 1){
+        for(int k = 0; k <= 400; k++){
+            for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+                if(10000 - 5 * k - 10 * l >= 0)
+                    dp[0][1][k][l] = 10000 - 5 * k - 10 * l;
+                
+            }
+        }
+    }
+
+    for(int i = 1; i <= 30; i++){
+        if(daystate[i] != 3) //非沙暴天
+            for(int j = 1; j <= 25; j++)
+                for(int k = wa[daystate[i]] * 2; k <= 400; k++)   
+                    for(int l = fo[daystate[i]] * 2; l <= (1200 - 3 * k) / 2; l++){
+                        if(dp[i - 1][j][k][l] < 0) continue;
+                        for(auto t : v[j])
+                            dp[i][t][k - wa[daystate[i]] * 2][l - fo[daystate[i]] * 2] = 
+                            max(dp[i - 1][j][k][l], dp[i][t][k - wa[daystate[i]] * 2][l - fo[daystate[i]] * 2]);
+                            //移动
+                    }
+        
+        for(int j = 1; j <= 25; j++)
+            for(int k = wa[daystate[i]]; k <= 400; k++)   
+                for(int l = fo[daystate[i]]; l <= (1200 - 3 * k) / 2; l++){
+                    if(dp[i - 1][j][k][l] < 0) continue;
+                    dp[i][j][k - wa[daystate[i]]][l - fo[daystate[i]]] = 
+                    max(dp[i - 1][j][k][l], dp[i][j][k - wa[daystate[i]]][l - fo[daystate[i]]]);
+                            //停留
+                }
+
+        
+        for(int k = wa[daystate[i]] * 3; k <= 400; k++)   
+            for(int l = fo[daystate[i]] * 3; l <= (1200 - 3 * k) / 2; l++){
+                if(dp[i - 1][18][k][l] < 0) continue;
+                dp[i][18][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3] = 
+                        max(dp[i - 1][18][k][l] + 1000, dp[i][18][k - wa[daystate[i]] * 3][l - fo[daystate[i]] * 3]);
+                        //挖矿
+            }
+
+        for(int k = 0; k <= 400; k++)   
+            for(int l = 0; l <= (1200 - 3 * k) / 2; l++){
+                if(k > 0)
+                    dp[i][14][k][l] = max(dp[i][14][k][l], dp[i][14][k - 1][l] - 10); //价格双倍
+                if(l > 0)
+                    dp[i][14][k][l] = max(dp[i][14][k][l], dp[i][14][k][l - 1] - 20);
+            }//买东西
+    }
+
+        double res = 0;
+        int t = 0;
+        int k1 = 0, l1 = 0;
+        for(int i = 1; i <= 25; i++)
+            for(int k = 0; k <= 400; k++)
+                for(int l = 0; l <= 600; l++)
+                    if(res < dp[i][25][k][l]){
+                        res = dp[i][25][k][l];
+                        k1 = k;
+                        l1 = l;
+                        t = i;
+                    }
+        
+        dfs(t, 25, k1, l1, day);
+        if(t == day) break;
+    }
+    
+    for(int i = 0; i < cnt; i++){
+        if(i == cnt){
+            st[i].re += st[i].wat * 2.5 + st[i].foo * 5.0;
+            st[i].wat = st[i].foo = 0;
+        }
+
+        cout << st[i].t << " " << st[i].day << " " << st[i].wat << " " << st[i].foo << " " << st[i].re << endl;
+    }
+    for(int i = 0; i <= 30; i++)
+        cout << daystate[i] << " ";
+    
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+
+    std::cout << "代码段运行时间: " << duration.count() << " 秒" << std::endl;
+}
+\end{minted}
+
+\textbf{第六关代码}
+\begin{minted}{matlab}
+function result = desert_survival_no_supply()
+clc; clearvars -except result;
+
+%% =========================
+%  参数设置（可按需要修改）
+%  =========================
+P.deadline   = 30;      % 截止日期
+P.moveDays   = 8;       % 起点到终点所需"可移动日"数
+P.maxLoad    = 1200;    % 负重上限 kg
+P.initMoney  = 10000;   % 初始资金 元
+
+% 资源参数
+P.waterMass  = 3;       % 每箱水质量 kg
+P.foodMass   = 2;       % 每箱食物质量 kg
+P.waterPrice = 5;       % 起点基准价格 元/箱
+P.foodPrice  = 10;      % 起点基准价格 元/箱
+
+%% ===== 挖矿问题新增参数 =====
+P.villageWaterPrice = 2 * P.waterPrice;   % 村庄水价
+P.villageFoodPrice  = 2 * P.foodPrice;    % 村庄食物价
+
+P.distStartMine   = 5;   % 起点->矿山
+P.distMineVillage = 2;   % 矿山->村庄（单程）
+P.distMineEnd     = 3;   % 矿山->终点
+P.distVillageEnd  = 3;   % 村庄->终点
+
+P.mineIncome = 1000;     % 挖矿1天收益
+
+% 补给次数序列：0 表示不去村庄；0.5表示最后只去一次村庄后直接去终点；
+% 1 表示矿山->村庄->矿山 完整一来回；
+% 1.5 表示一来回后，最后再去一次村庄并从村庄去终点
+P.supplyCountList = 0:0.5:5;    % 这个范围你可以自己改
+
+% 基础消耗（箱）
+% [水, 食物]
+P.baseClear  = [3, 4];
+P.baseHot    = [9, 9];
+P.baseSand   = [10, 10];
+
+% 行走倍数、停留倍数（题目规则）
+P.walkMult   = 2;       % 行走日 = 2 * 基础消耗
+P.stayMult   = 1;       % 停留日 = 1 * 基础消耗
+
+% 天气生成概率（这是"未知天气"下必须额外假设的部分，可自行改）
+% 概率之和必须为1
+
+P.pSand      = 0.15;
+P.pClear     = 0.40;
+P.pHot       = 1-P.pClear-P.pSand;
+
+% 额外限制（按你截图中的思路）
+P.maxSandDays = 10;     % c <= 10
+P.maxTry      = 2e5;    % 为了采样足够有效路径，最多尝试次数
+P.Nsim        = 5000;  % 蒙特卡洛样本数
+
+%% =========================
+%  计算"补给次数-最大盈利"关系
+%  =========================
+fprintf('正在计算"补给次数-最大盈利"关系...\n');
+
+profitList = nan(size(P.supplyCountList));
+bestMineDaysList = nan(size(P.supplyCountList));
+bestInitWaterList = nan(size(P.supplyCountList));
+bestInitFoodList  = nan(size(P.supplyCountList));
+
+for k = 1:length(P.supplyCountList)
+    supplyCount = P.supplyCountList(k);
+    fprintf('正在计算补给次数 = %.1f ...\n', supplyCount);
+
+    [bestProfit, bestMineDays, bestW0, bestF0] = ...
+        optimizeMiningPlanForSupplyCount(P, supplyCount);
+
+    profitList(k) = bestProfit;
+    bestMineDaysList(k) = bestMineDays;
+    bestInitWaterList(k) = bestW0;
+    bestInitFoodList(k)  = bestF0;
+end
+
+%% 绘图
+figure;
+plot(P.supplyCountList, profitList, '-o', 'LineWidth', 1.5, 'MarkerSize', 6);
+xlabel('去村庄补给次数');
+ylabel('最大盈利');
+title('去村庄补给次数与最大盈利的关系');
+grid on;
+
+%% 如需同时看看最优挖矿天数，可加第二张图
+figure;
+plot(P.supplyCountList, bestMineDaysList, '-s', 'LineWidth', 1.5, 'MarkerSize', 6);
+xlabel('去村庄补给次数');
+ylabel('最优挖矿天数');
+title('去村庄补给次数与最优挖矿天数的关系');
+grid on;
+
+%% 输出结果
+result.supplyCountList = P.supplyCountList;
+result.profitList = profitList;
+result.bestMineDaysList = bestMineDaysList;
+result.bestInitWaterList = bestInitWaterList;
+result.bestInitFoodList = bestInitFoodList;
+
+%% 输出结果
+result.sandProbList = sandProbList;
+result.survivalRateList = survivalRateList;
+result.bestWaterList = bestWaterList;
+result.bestFoodList = bestFoodList;
+end
+
+
+%% =========================================================
+%  蒙特卡洛生成样本：每条样本表示一条"完整到达终点"的天气路径
+%  输出：
+%    needW(k), needF(k): 第k条样本到达终点所需的水/食物箱数
+% =========================================================
+function [needW, needF, tripDays] = simulateDemands(P)
+
+needW    = zeros(P.Nsim,1);
+needF    = zeros(P.Nsim,1);
+tripDays = zeros(P.Nsim,1);
+
+cnt = 0;      % 已接受样本数
+tries = 0;    % 总尝试次数
+
+while cnt < P.Nsim && tries < P.maxTry
+    tries = tries + 1;
+
+    moved = 0;      % 已完成的可移动天数
+    day   = 0;      % 已经历总天数
+    sandDays = 0;
+
+    seq = [];       % 1=晴朗, 2=高温, 3=沙暴
+    w = 0; f = 0;
+
+    valid = true;
+
+    while day < P.deadline && moved < P.moveDays
+        day = day + 1;
+        wt = drawWeather(P);
+
+        if wt == 3
+            % 沙暴：必须停留
+            sandDays = sandDays + 1;
+            w = w + P.stayMult * P.baseSand(1);
+            f = f + P.stayMult * P.baseSand(2);
+        elseif wt == 1
+            % 晴朗：前进
+            moved = moved + 1;
+            w = w + P.walkMult * P.baseClear(1);
+            f = f + P.walkMult * P.baseClear(2);
+        else
+            % 高温：前进
+            moved = moved + 1;
+            w = w + P.walkMult * P.baseHot(1);
+            f = f + P.walkMult * P.baseHot(2);
+        end
+
+        seq(end+1) = wt; %#ok<AGROW>
+
+        % 约束1：沙暴总数上限
+        if sandDays > P.maxSandDays
+            valid = false;
+            break;
+        end
+
+        % 约束2：到当前为止沙暴比例 < 1/3（你图里的"较少出现沙暴"）
+        if sandDays / day >= 1/3
+            valid = false;
+            break;
+        end
+
+        % 约束3：任意连续 j>=2 天，沙暴比例 <= 1/2
+        if ~checkWindowConstraint(seq)
+            valid = false;
+            break;
+        end
+    end
+
+    % 必须在截止日前完成 moveDays 次有效移动
+    if valid && moved >= P.moveDays && day <= P.deadline
+        cnt = cnt + 1;
+        needW(cnt) = w;
+        needF(cnt) = f;
+        tripDays(cnt) = day;
+    end
+end
+
+% 截断未使用部分
+needW    = needW(1:cnt);
+needF    = needF(1:cnt);
+tripDays = tripDays(1:cnt);
+
+end
+
+
+%% =========================================================
+%  搜索最优初始购买方案
+%  生存条件：初始水 >= 该样本所需水，且初始食物 >= 该样本所需食物
+% =========================================================
+function [bestW0, bestF0, bestRate] = searchBestPlan(needW, needF, P)
+
+maxWaterByLoad  = floor(P.maxLoad / P.waterMass);
+maxFoodByLoad   = floor(P.maxLoad / P.foodMass);
+maxWaterByMoney = floor(P.initMoney / P.waterPrice);
+maxFoodByMoney  = floor(P.initMoney / P.foodPrice);
+
+maxW = min(maxWaterByLoad,  maxWaterByMoney);
+maxF = min(maxFoodByLoad,   maxFoodByMoney);
+
+bestRate = -1;
+bestW0 = 0;
+bestF0 = 0;
+
+for W0 = 0:maxW
+    % 由资金、负重双重限制推 F0 上界
+    maxF_load  = floor((P.maxLoad  - P.waterMass  * W0) / P.foodMass);
+    maxF_money = floor((P.initMoney - P.waterPrice * W0) / P.foodPrice);
+    upperF = min([maxF, maxF_load, maxF_money]);
+
+    if upperF < 0
+        continue;
+    end
+
+    for F0 = 0:upperF
+        alive = (W0 >= needW) & (F0 >= needF);
+        rate = mean(alive);
+
+        if rate > bestRate
+            bestRate = rate;
+            bestW0 = W0;
+            bestF0 = F0;
+        end
+    end
+end
+
+end
+
+
+%% =========================================================
+%  随机生成一天的天气
+%  1=晴朗, 2=高温, 3=沙暴
+% =========================================================
+function wt = drawWeather(P)
+r = rand;
+if r < P.pClear
+    wt = 1;
+elseif r < P.pClear + P.pHot
+    wt = 2;
+else
+    wt = 3;
+end
+end
+
+
+%% =========================================================
+%  检查：任意连续 j>=2 天，沙暴比例 <= 1/2
+%  这里采用严格判定
+% =========================================================
+function ok = checkWindowConstraint(seq)
+n = length(seq);
+ok = true;
+
+for len = 2:n
+    for s = 1:(n-len+1)
+        window = seq(s:s+len-1);
+        sandRatio = sum(window == 3) / len;
+        if sandRatio > 1/2
+            ok = false;
+            return;
+        end
+    end
+end
+end
+
+function [bestProfit, bestMineDays, bestW0, bestF0] = optimizeMiningPlanForSupplyCount(P, supplyCount)
+
+bestProfit = -inf;
+bestMineDays = NaN;
+bestW0 = NaN;
+bestF0 = NaN;
+
+% 根据补给次数，先确定固定路线所需移动天数
+[travelDays, needFinalVillageToEnd] = getTravelDaysFromSupplyCount(P, supplyCount);
+
+% 超过截止日期则直接不可行
+if travelDays > P.deadline
+    return;
+end
+
+% 能用于挖矿的最大天数
+maxMineDays = P.deadline - travelDays;
+
+% 初始可购买上限（受资金和负重限制）
+maxWaterByLoad  = floor(P.maxLoad / P.waterMass);
+maxFoodByLoad   = floor(P.maxLoad / P.foodMass);
+maxWaterByMoney = floor(P.initMoney / P.waterPrice);
+maxFoodByMoney  = floor(P.initMoney / P.foodPrice);
+
+maxW = min(maxWaterByLoad, maxWaterByMoney);
+maxF = min(maxFoodByLoad, maxFoodByMoney);
+
+% 枚举：初始水、初始食物、挖矿天数
+for W0 = 0:maxW
+    maxF_load  = floor((P.maxLoad - P.waterMass * W0) / P.foodMass);
+    maxF_money = floor((P.initMoney - P.waterPrice * W0) / P.foodPrice);
+    upperF = min(maxF, min(maxF_load, maxF_money));
+
+    if upperF < 0
+        continue;
+    end
+
+    for F0 = 0:upperF
+        initCost = W0 * P.waterPrice + F0 * P.foodPrice;
+
+        % 初始购买就已经超预算
+        if initCost > P.initMoney
+            continue;
+        end
+
+        for mineDays = 0:maxMineDays
+            ok = checkMiningPlanFeasible(W0, F0, mineDays, supplyCount, P);
+
+            if ok
+                profit = mineDays * P.mineIncome - initCost;
+
+                if profit > bestProfit
+                    bestProfit = profit;
+                    bestMineDays = mineDays;
+                    bestW0 = W0;
+                    bestF0 = F0;
+                end
+            end
+        end
+    end
+end
+
+if isinf(bestProfit)
+    bestProfit = NaN;
+end
+
+end
+
+function [travelDays, needFinalVillageToEnd] = getTravelDaysFromSupplyCount(P, supplyCount)
+
+% supplyCount:
+% 0   = 起点->矿山->终点
+% 0.5 = 起点->矿山->村庄->终点
+% 1   = 起点->矿山->村庄->矿山->终点
+% 1.5 = 起点->矿山->村庄->矿山->村庄->终点
+% 2   = 起点->矿山->村庄->矿山->村庄->矿山->终点
+% ...
+
+nRound = floor(supplyCount);              % 完整往返次数（矿山->村庄->矿山）
+hasHalf = abs(supplyCount - nRound - 0.5) < 1e-9;
+
+travelDays = P.distStartMine ...
+           + nRound * (2 * P.distMineVillage);
+
+if hasHalf
+    % 最后一次只到村庄，再从村庄到终点
+    travelDays = travelDays + P.distMineVillage + P.distVillageEnd;
+    needFinalVillageToEnd = true;
+else
+    % 直接从矿山到终点
+    travelDays = travelDays + P.distMineEnd;
+    needFinalVillageToEnd = false;
+end
+
+end
+
+function ok = checkMiningPlanFeasible(W0, F0, mineDays, supplyCount, P)
+
+ok = false;
+
+% 用高温作为保守消耗标准
+walkNeed = P.walkMult * P.baseHot;   % [水, 食物]
+mineNeed = 3 * P.baseHot;            % 挖矿1天 [水, 食物]
+
+nRound = floor(supplyCount);
+hasHalf = abs(supplyCount - nRound - 0.5) < 1e-9;
+
+% -------- 第1段：起点 -> 矿山 --------
+need1 = P.distStartMine * walkNeed;
+W = W0 - need1(1);
+F = F0 - need1(2);
+
+if W < 0 || F < 0
+    return;
+end
+
+% -------- 中间若干轮：矿山挖矿 + 去村庄补给 + 返回矿山 --------
+% 设总挖矿天数尽量平均分布到各次在矿山阶段
+numMineStages = nRound + 1;   % 完整往返n次时，共有 n+1 个"在矿山可挖矿阶段"
+if hasHalf
+    numMineStages = nRound + 1; % 最后半次前也仍有 n+1 个矿山阶段
+end
+
+mineDaysAlloc = floor(mineDays / numMineStages) * ones(1, numMineStages);
+r = mod(mineDays, numMineStages);
+mineDaysAlloc(1:r) = mineDaysAlloc(1:r) + 1;
+
+for i = 1:nRound
+    % 先在矿山挖矿
+    W = W - mineDaysAlloc(i) * mineNeed(1);
+    F = F - mineDaysAlloc(i) * mineNeed(2);
+    if W < 0 || F < 0
+        return;
+    end
+
+    % 从矿山走到村庄
+    goNeed = P.distMineVillage * walkNeed;
+    W = W - goNeed(1);
+    F = F - goNeed(2);
+    if W < 0 || F < 0
+        return;
+    end
+
+    % 在村庄补给：为了完成"回矿山 + 后续所有行程"，一次性补到刚好够且不超负重
+    [futureW, futureF] = futureNeedAfterVillage(i, nRound, hasHalf, mineDaysAlloc, P, walkNeed, mineNeed);
+
+    buyW = max(0, futureW - W);
+    buyF = max(0, futureF - F);
+
+    if buyW * P.waterMass + buyF * P.foodMass > P.maxLoad
+        return;
+    end
+
+    W = W + buyW;
+    F = F + buyF;
+
+    % 回矿山
+    backNeed = P.distMineVillage * walkNeed;
+    W = W - backNeed(1);
+    F = F - backNeed(2);
+    if W < 0 || F < 0
+        return;
+    end
+end
+
+% -------- 最后一个矿山阶段 --------
+W = W - mineDaysAlloc(end) * mineNeed(1);
+F = F - mineDaysAlloc(end) * mineNeed(2);
+if W < 0 || F < 0
+    return;
+end
+
+% -------- 结束段：去终点 --------
+if hasHalf
+    % 矿山->村庄
+    goNeed = P.distMineVillage * walkNeed;
+    W = W - goNeed(1);
+    F = F - goNeed(2);
+    if W < 0 || F < 0
+        return;
+    end
+
+    % 最后一次只到村庄，补给后直接去终点
+    endNeed = P.distVillageEnd * walkNeed;
+    buyW = max(0, endNeed(1) - W);
+    buyF = max(0, endNeed(2) - F);
+
+    if buyW * P.waterMass + buyF * P.foodMass > P.maxLoad
+        return;
+    end
+
+    W = W + buyW;
+    F = F + buyF;
+
+    W = W - endNeed(1);
+    F = F - endNeed(2);
+    if W < 0 || F < 0
+        return;
+    end
+else
+    % 直接矿山->终点
+    endNeed = P.distMineEnd * walkNeed;
+    W = W - endNeed(1);
+    F = F - endNeed(2);
+    if W < 0 || F < 0
+        return;
+    end
+end
+
+ok = true;
+
+end
+
+function [futureW, futureF] = futureNeedAfterVillage(iRound, nRound, hasHalf, mineDaysAlloc, P, walkNeed, mineNeed)
+
+% 站在"第 iRound 次到达村庄补给点"这个时刻，
+% 计算从此刻开始到终点还至少需要多少水/食物
+
+futureW = 0;
+futureF = 0;
+
+% 先回矿山
+futureW = futureW + P.distMineVillage * walkNeed(1);
+futureF = futureF + P.distMineVillage * walkNeed(2);
+
+% 后续矿山阶段：第 iRound+1, ..., 最后
+for j = (iRound+1):length(mineDaysAlloc)
+    futureW = futureW + mineDaysAlloc(j) * mineNeed(1);
+    futureF = futureF + mineDaysAlloc(j) * mineNeed(2);
+
+    if j < length(mineDaysAlloc)
+        % 还要再去一次村庄并返回矿山
+        futureW = futureW + 2 * P.distMineVillage * walkNeed(1);
+        futureF = futureF + 2 * P.distMineVillage * walkNeed(2);
+    end
+end
+
+% 最后一段去终点
+if hasHalf
+    futureW = futureW + P.distMineVillage * walkNeed(1) + P.distVillageEnd * walkNeed(1);
+    futureF = futureF + P.distMineVillage * walkNeed(2) + P.distVillageEnd * walkNeed(2);
+else
+    futureW = futureW + P.distMineEnd * walkNeed(1);
+    futureF = futureF + P.distMineEnd * walkNeed(2);
+end
+
+end
+\end{minted}
