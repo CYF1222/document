@@ -51,6 +51,16 @@
 % ---------- 页面几何 ----------
 \geometry{a4paper, margin=2.5cm}
 
+% ---------- 重定义标题 ----------
+\makeatletter
+\def\maketitle{%
+    \begin{center}
+      \heiti \bfseries \fontsize{22pt}{26.4pt}%
+      基于沙漠游戏的优化建模{\fontsize{22pt}{26.4pt}\selectfont1}
+    \end{center}
+}
+\makeatother
+
 % ---------- 章节标题格式 ----------
 \titleformat{\section}
   {\centering\Large\bfseries}
@@ -85,7 +95,7 @@
 % ---------- 摘要标题 ----------
 \renewcommand{\abstractname}{%
   \begin{center}
-    \bfseries \heiti \fontsize{14pt}{16.8pt} 摘要
+    \bfseries \heiti \fontsize{14pt}{16.8pt} 摘 要
   \end{center}
 }
 
