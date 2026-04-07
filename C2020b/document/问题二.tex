@@ -42,20 +42,41 @@ T_t \geqslant 0, F_t \geqslant 0
 
 \textbf{4.具有马尔可夫性质的模型总结} 
 
-基于以上分析，我们可写出最后的具有马尔可夫性质的最大化收益决策模型：
-\begin{align}
-F = \{ F(t) \mid F(t) \text{ 为基于 } (D_t, I) \text{ 算出来的最大化收益} \}
-\end{align}
+其中终端条件为
+问题二标准约束形式
+\begin{equation}
+V_{\tau}(S_{\tau})
+=
+G_{\tau}+\frac{1}{2}P_wT_{\tau}+\frac{1}{2}P_fF_{\tau},
+\qquad N_{\tau}=N_e.
+\label{eq:q2_terminal}
+\end{equation}
 
-整合即得：
 \[
+\mathrm{s.t.}\left\{
 \begin{aligned}
-\max_{} \quad & F(t) \\
-\text{s.t.} \quad & 0 \le t \le 30, \\
-& G_t \ge 0,\; F_t \ge 0,\; T_t \ge 0, \quad t = 0,1,\dots,30, \\
-& 0 < M_t \le M_{\max}, \quad t = 0,1,\dots,30, \\
-& D_t = 3 \implies N_t = N_{t-1}, \quad t = 1,\dots,30.
+&S_0=(N_s,T_0,F_0,G_0,D_0,0),\\[1mm]
+&T_{t+1}=T_t+B_t^w-c_w(D_t,a_t),\\[1mm]
+&F_{t+1}=F_t+B_t^f-c_f(D_t,a_t),\\[1mm]
+&G_{t+1}=G_t-p_t^wB_t^w-p_t^fB_t^f+r(a_t),\\[1mm]
+&m_wT_{t+1}+m_fF_{t+1}\le M_{\max},\\[1mm]
+&T_{t+1}\ge 0,\quad F_{t+1}\ge 0,\quad G_{t+1}\ge 0,\\[1mm]
+&a_t=\text{move}\ \Rightarrow\ (N_t,N_{t+1})\in\mathcal{E},\\[1mm]
+&a_t=\text{stay}\ \Rightarrow\ N_{t+1}=N_t,\\[1mm]
+&a_t=\text{mine}\ \Rightarrow\ N_t\in\Omega_h,\ N_{t+1}=N_t,\\[1mm]
+&D_t=3\ \Rightarrow\ a_t\neq \text{move},\\[1mm]
+&B_t^w=B_t^f=0,\qquad N_t\notin \{N_s\}\cup\Omega_v,\ t\ge 1,\\[1mm]
+&0\le t\le T_{\max}-1.
 \end{aligned}
+\right.
+\label{eq:q2_cons}
+\]
+
+其中单步回报函数可统一记为
+\[
+R_t(S_t,a_t,B_t^w,B_t^f)
+=
+-p_t^wB_t^w-p_t^fB_t^f+r(a_t).
 \]
 
 \subsubsection{模型的求解及结果}

@@ -2,6 +2,28 @@
 %
 玩家需要在30天内从起点出发，最终到达终点，要求最大化最终的金额。
 
+为刻画题目中各区域之间的通行关系，本文首先引入 Dijkstra 最短路径算法对地图进行预处理。Dijkstra 算法是一种用于求解非负权图单源最短路径问题的经典算法，适用于边权均为非负的网络结构。将地图抽象为无向赋权图
+\[
+G=(V,E),
+\]
+其中，\(V\) 表示地图中所有区域节点的集合，\(E\) 表示节点之间可直接到达的边集合。若节点 \(v_i\) 与节点 \(v_j\) 在地图中相邻，则记 \((v_i,v_j)\in E\)。进一步设边权函数为
+\[
+w:E\to \mathbb{R}_{\ge 0},
+\]
+其中，\(w(v_i,v_j)\) 表示从节点 \(v_i\) 移动到节点 \(v_j\) 所需的代价。由于本题中玩家每天最多只能移动到一个相邻区域，且单次移动不存在负代价，故可将相邻区域之间的边权统一记为 1，从而将原问题转化为标准的非负权最短路问题。
+
+Dijkstra 算法的核心思想是“逐步逼近最优解”。设起点为 \(s\)，定义 \(d(v)\) 为起点 \(s\) 到节点 \(v\) 的当前最短距离估计值，初始化为
+\[
+d(s)=0,\qquad d(v)=+\infty \ \ (v\neq s).
+\]
+随后，在每一步迭代中，从未确定最短距离的节点中选取具有最小 \(d(v)\) 的节点，将其加入已确定集合，并对其所有邻接节点进行松弛操作：
+\[
+d(v_j)=\min\{d(v_j),\ d(v_i)+w(v_i,v_j)\}.
+\]
+重复上述过程，直至所有节点的最短距离均被确定。由于该算法始终在非负权条件下扩展当前最优路径，因此能够保证所得结果即为全局最短路径。该方法不仅可以得到起点到任意节点的最短距离，还可以通过记录前驱节点恢复完整路径序列。
+
+在本题中，Dijkstra 算法主要用于求解起点、村庄、矿山和终点等关键位置之间的最短路径及对应距离，为后续优化模型提供基础数据支持。具体而言，先利用该算法分别计算各关键节点对之间的最短通行路线，得到路径长度与节点经过顺序；再将最短路径结果嵌入后续决策模型中，与天气状态、水和食物消耗、负重约束、补给策略及挖矿收益等因素相结合，进一步建立收益最大化模型。这样处理能够有效减少复杂地图上的无效路径枚举，将“路径搜索”与“资源决策”分层求解，从而提高模型求解效率，并增强整体建模过程的条理性与可解释性。
+
 \begin{figure}[H] % 参数 h(here), t(top), b(bottom), p(page) 控制浮动位置
     \centering % 使图片居中
     \includegraphics[width=0.8\textwidth]{C2020b/figure/题目示意图.pdf}
@@ -26,56 +48,71 @@
 %
 但是起点购买的物资可能不足以支持整个游戏过程，因此需要在村庄进行补给，同样需要减少资金的损耗，即购买尽可能少的物资。
 
-\subsubsection{迭代表达式}
+\subsubsection{模型}
 
-根据游戏规则，我们分析得出一般情况下的最优策略的迭代表达式：
-
-设\(\alpha \)为第\(t\)日价格比率的绝对值，那么有
-\begin{center}
-    $\alpha = \begin{cases}
-        1, & t=0 \\
-        2, & N_t=15 \\
-        0.5, & N_t=27
-    \end{cases}$
-\end{center}
-
-设\(\beta \)为第\(t\)日消耗比率的绝对值，那么有
-
-\begin{center}
-    $\beta = \begin{cases}
-        1, & X_t=1 \\
-        2, & X_t=2 \\
-        3, & X_t=3
-    \end{cases}$
-\end{center}
-我们建立了问题一的递推关系式。
-\begin{align}
-    &G_t = G_{t-1} + W_t - \alpha\bigl(B_w(t)P_w + B_f(t)P_f\bigr) \\
-    &F_t = F_{t-1} - \beta C_f + B_f(t) \\
-    &T_t = T_{t-1} - \beta C_w + B_w(t) \\
-    &M_t = M_{t-1} - \beta(m_w C_w + m_f C_f) + B_w(t)m_w + B_f(t)m_f \\
-    &G_T = G_{t=T} + \alpha\bigl(F_{t=T}P_f + T_{t=T}P_w\bigr)
-\end{align}
-
-式$1$表示$t$日的剩余金额，第一项表示第$t-1$日的剩余金额，第二项表示第$t$日的收益，括号中第一项表示第$t$日买水的支出，第二项表示第$t$日买食物的支出。
-
-式$2$表示$t$日的剩余食物，第一项表示第$t-1$日的剩余食物，第二项表示第$t$日消耗的食物，第三项表示第$t$日购买的食物。
-
-式$3$表示$t$日的剩余水，第一项表示第$t-1$日的剩余水，第二项表示第$t$日消耗的水，第三项表示第$t$日购买的水。
-
-式$4$表示$t$日的负重，第一项表示第$t-1$日的负重，第二项表示第$t$日减少的负重，第三项表示第$t$日增加的负重。
-
-式$5$表示到达终点时的金额，第一项表示到达当日的剩余金额，括号中第一项表示剩余食物的退还增加的金额，第二项表示剩余水的退还增加的金额。
-
-因此，我们将原问题转化为：
+则问题一可整理为如下确定性动态优化模型：
+\begin{equation}
+\max \ S_1
+=G_{\tau}+\frac{1}{2}P_wT_{\tau}+\frac{1}{2}P_fF_{\tau}
+\label{eq:q1_obj}
+\end{equation}
 \[
+\mathrm{s.t.}\left\{
 \begin{aligned}
-\max_{} \quad & G_T \\
-\text{s.t.} \quad & 0 \le T \le 30, \\
-& G_t \ge 0,\; F_t \ge 0,\; T_t \ge 0, \quad t = 0,1,\dots,30, \\
-& 0 < M_t \le M_{\max}, \quad t = 0,1,\dots,30, \\
-& D_t = 3 \implies N_t = N_{t-1}, \quad t = 1,\dots,30.
+&N_0=N_s,\qquad N_{\tau}=N_e,\qquad 0\le \tau \le T_{\max},\\[2mm]
+&T_t=T_{t-1}+B_t^w-c_w(D_t,a_t), \qquad t=1,2,\dots,\tau,\\[1mm]
+&F_t=F_{t-1}+B_t^f-c_f(D_t,a_t), \qquad t=1,2,\dots,\tau,\\[1mm]
+&G_t=G_{t-1}-p_t^wB_t^w-p_t^fB_t^f+r(a_t), \qquad t=1,2,\dots,\tau,\\[1mm]
+&m_wT_t+m_fF_t\le M_{\max}, \qquad t=0,1,\dots,\tau,\\[1mm]
+&T_t\ge 0,\quad F_t\ge 0,\quad G_t\ge 0,\qquad t=0,1,\dots,\tau,\\[1mm]
+&a_t=\text{move}\ \Rightarrow\ (N_{t-1},N_t)\in\mathcal{E},\\[1mm]
+&a_t=\text{stay}\ \Rightarrow\ N_t=N_{t-1},\\[1mm]
+&a_t=\text{mine}\ \Rightarrow\ N_{t-1}\in\Omega_h,\ N_t=N_{t-1},\\[1mm]
+&D_t=3\ \Rightarrow\ a_t\neq \text{move},\\[1mm]
+&B_t^w,B_t^f\ge 0,\qquad t=0,1,\dots,\tau,\\[1mm]
+&B_t^w=B_t^f=0,\qquad N_{t-1}\notin \{N_s\}\cup\Omega_v,\ t\ge 1.
 \end{aligned}
+\right.
+\label{eq:q1_cons}
+\]
+
+其中，
+\[
+c_w(D_t,a_t)=
+\begin{cases}
+2\,\hat c_w(D_t), & a_t=\text{move},\\
+\hat c_w(D_t), & a_t=\text{stay},\\
+3\,\hat c_w(D_t), & a_t=\text{mine},
+\end{cases}
+\qquad
+c_f(D_t,a_t)=
+\begin{cases}
+2\,\hat c_f(D_t), & a_t=\text{move},\\
+\hat c_f(D_t), & a_t=\text{stay},\\
+3\,\hat c_f(D_t), & a_t=\text{mine},
+\end{cases}
+\]
+\[
+r(a_t)=
+\begin{cases}
+R_0, & a_t=\text{mine},\\
+0, & \text{otherwise},
+\end{cases}
+\qquad
+p_t^w=
+\begin{cases}
+P_w, & t=0,\ N_0=N_s,\\
+2P_w, & N_{t-1}\in\Omega_v,\\
+0, & \text{otherwise},
+\end{cases}
+\]
+\[
+p_t^f=
+\begin{cases}
+P_f, & t=0,\ N_0=N_s,\\
+2P_f, & N_{t-1}\in\Omega_v,\\
+0, & \text{otherwise}.
+\end{cases}
 \]
 
 对于最短路径，我们采用最经典的Dijkstra算法进行求解 ~\cite{10154322}。

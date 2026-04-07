@@ -173,12 +173,69 @@ $W_0$为单人挖矿基础收益。当 $k_t^h$ 较大时，虽然联盟总体仍
 %
 若更强调联盟整体利润，可适当提高 $\lambda$；若更强调协作稳定性，则减小 $\lambda$。
 
-由此，第三问的双目标模型可表述为
+于是问题三（1）的标准模型可写为
+\begin{equation}
+\max \ J
+=
+\lambda \frac{S_{\mathrm{sum}}}{S_{\mathrm{ref}}}
++(1-\lambda)\delta,
+\qquad 0\le \lambda \le 1.
+\label{eq:q31_obj}
+\end{equation}
+\[
+\mathrm{s.t.}\left\{
+\begin{aligned}
+&T_{i,t}=T_{i,t-1}+B_{i,t}^w-c_{i,t}^w,\qquad i=1,\dots,n,\ t=1,\dots,\tau_i,\\[1mm]
+&F_{i,t}=F_{i,t-1}+B_{i,t}^f-c_{i,t}^f,\qquad i=1,\dots,n,\ t=1,\dots,\tau_i,\\[1mm]
+&G_{i,t}=G_{i,t-1}-\Pi_{i,t}^{\mathrm{buy}}+\Pi_{i,t}^{\mathrm{mine}},
+\qquad i=1,\dots,n,\ t=1,\dots,\tau_i,\\[1mm]
+&m_wT_{i,t}+m_fF_{i,t}\le M_{\max},\qquad i=1,\dots,n,\ t=0,\dots,\tau_i,\\[1mm]
+&T_{i,t}\ge 0,\quad F_{i,t}\ge 0,\quad G_{i,t}\ge 0,
+\qquad i=1,\dots,n,\ t=0,\dots,\tau_i,\\[1mm]
+&N_{i,0}=N_s,\qquad N_{i,\tau_i}=N_e,\qquad 0\le \tau_i\le T_{\max},\\[1mm]
+&a_{i,t}=\text{move}\ \Rightarrow\ (N_{i,t-1},N_{i,t})\in\mathcal{E},\\[1mm]
+&a_{i,t}=\text{stay}\ \Rightarrow\ N_{i,t}=N_{i,t-1},\\[1mm]
+&a_{i,t}=\text{mine}\ \Rightarrow\ N_{i,t-1}\in\Omega_h,\ N_{i,t}=N_{i,t-1},\\[1mm]
+&D_t=3\ \Rightarrow\ a_{i,t}\neq\text{move},\qquad i=1,\dots,n,\\[1mm]
+&B_{i,t}^w=B_{i,t}^f=0,\qquad N_{i,t-1}\notin \{N_s\}\cup\Omega_v,\ t\ge 1.
+\end{aligned}
+\right.
+\label{eq:q31_cons}
+\]
 
-\begin{center}
-    $\max\; G_S=\sum_{i=1}^n G_i,$
-    $\max\; \delta.$
-\end{center}
+其中
+\[
+c_{i,t}^w=
+\begin{cases}
+\rho^{\mathrm{move}}(k_{uv,t})\cdot 2\hat c_w(D_t), & a_{i,t}=\text{move},\\
+\hat c_w(D_t), & a_{i,t}=\text{stay},\\
+\rho^{\mathrm{mine}}(k_{h,t})\cdot 3\hat c_w(D_t), & a_{i,t}=\text{mine},
+\end{cases}
+\]
+\[
+c_{i,t}^f=
+\begin{cases}
+\rho^{\mathrm{move}}(k_{uv,t})\cdot 2\hat c_f(D_t), & a_{i,t}=\text{move},\\
+\hat c_f(D_t), & a_{i,t}=\text{stay},\\
+\rho^{\mathrm{mine}}(k_{h,t})\cdot 3\hat c_f(D_t), & a_{i,t}=\text{mine},
+\end{cases}
+\]
+\[
+\Pi_{i,t}^{\mathrm{buy}}
+=
+\rho^{\mathrm{buy}}(k_{v,t})
+\left(P_w B_{i,t}^w+P_f B_{i,t}^f\right),
+\]
+\[
+\Pi_{i,t}^{\mathrm{mine}}
+=
+\begin{cases}
+\dfrac{R_0}{k_{h,t}}, & a_{i,t}=\text{mine},\\
+0, & \text{otherwise}.
+\end{cases}
+\]
+
+这就是已知天气条件下的多人静态协同优化标准形式。
 
 \begin{figure}[H]
     \centering
@@ -422,3 +479,57 @@ $3\times(9\times 5+9\times10)=405元$，因此只有晴朗挖矿才可能盈利�
   \includegraphics[width=0.5\textwidth]{C2020b/figure/第六关一般情况下最优路线图.png}
   \caption{第六关一般情况下最优路线图}
 \end{figure}
+
+为从第 $t$ 天开始在状态 $\mathbf{X}_t$ 下能够获得的最大期望联盟效用，则问题三（2）可表述为
+\begin{equation}
+V_t(\mathbf{X}_t)
+=
+\max_{\mathbf{u}_t,\{B_{i,t}^w,B_{i,t}^f\}_{i=1}^n}
+\left\{
+R_t(\mathbf{X}_t,\mathbf{u}_t)
++
+\sum_{d'\in\{1,2,3\}}
+\pi(d'|D_t)\,
+V_{t+1}(\mathbf{X}_{t+1}^{(d')})
+\right\},
+\label{eq:q32_bellman}
+\end{equation}
+终端条件为
+\begin{equation}
+V_{\tau}(\mathbf{X}_{\tau})
+=
+\lambda \frac{\sum_{i=1}^n S_i}{S_{\mathrm{ref}}}
++(1-\lambda)\delta.
+\label{eq:q32_terminal}
+\end{equation}
+
+其约束为
+\[
+\mathrm{s.t.}\left\{
+\begin{aligned}
+&T_{i,t+1}=T_{i,t}+B_{i,t}^w-c_{i,t}^w,\qquad i=1,\dots,n,\\[1mm]
+&F_{i,t+1}=F_{i,t}+B_{i,t}^f-c_{i,t}^f,\qquad i=1,\dots,n,\\[1mm]
+&G_{i,t+1}=G_{i,t}-\Pi_{i,t}^{\mathrm{buy}}+\Pi_{i,t}^{\mathrm{mine}},
+\qquad i=1,\dots,n,\\[1mm]
+&m_wT_{i,t+1}+m_fF_{i,t+1}\le M_{\max},\qquad i=1,\dots,n,\\[1mm]
+&T_{i,t+1}\ge 0,\quad F_{i,t+1}\ge 0,\quad G_{i,t+1}\ge 0,
+\qquad i=1,\dots,n,\\[1mm]
+&a_{i,t}=\text{move}\ \Rightarrow\ (N_{i,t},N_{i,t+1})\in\mathcal{E},\\[1mm]
+&a_{i,t}=\text{stay}\ \Rightarrow\ N_{i,t+1}=N_{i,t},\\[1mm]
+&a_{i,t}=\text{mine}\ \Rightarrow\ N_{i,t}\in\Omega_h,\ N_{i,t+1}=N_{i,t},\\[1mm]
+&D_t=3\ \Rightarrow\ a_{i,t}\neq \text{move},\qquad i=1,\dots,n,\\[1mm]
+&B_{i,t}^w=B_{i,t}^f=0,\qquad N_{i,t}\notin \{N_s\}\cup\Omega_v,\ t\ge 1,\\[1mm]
+&0\le t\le T_{\max}-1.
+\end{aligned}
+\right.
+\label{eq:q32_cons}
+\]
+
+其中
+\[
+R_t(\mathbf{X}_t,\mathbf{u}_t)
+=
+\lambda \frac{\sum_{i=1}^n\left(-\Pi_{i,t}^{\mathrm{buy}}+\Pi_{i,t}^{\mathrm{mine}}\right)}{S_{\mathrm{ref}}}
++(1-\lambda)\,\delta_t,
+\]
+$\delta_t$ 表示第 $t$ 天基于各玩家当前收益状态构造的阶段稳定性指标。
